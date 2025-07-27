@@ -1,0 +1,78 @@
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('Log in');
+}
+//Κώδικας για Log in στο App
+function login(email, choice) {
+  // Get the active user's email
+  var activeUserEmail = Session.getActiveUser().getEmail();
+  
+  // If the active user's email doesn't match the entered email, return false
+  if (activeUserEmail !== email) {
+    return false;
+  }
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Credentials');
+  var dataRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2); // Read only the necessary columns from row 2
+  var data = dataRange.getValues();
+  
+  // Transform the data into a map for quick lookup
+  var credentialsMap = {};
+  data.forEach(function(row) {
+    credentialsMap[row[0]] = row[1];
+  });
+  /*if(credentialsMap[email]==="Agent" && credentialsMap[email] === choice && !SpreadsheetApp.getActiveSpreadsheet().getSheetByName(email)){
+    yourNewSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet();
+    yourNewSheet.setName(email);
+  }*/
+  
+
+  // Check if the email exists in the map and if the choice matches
+  return credentialsMap[email] === choice;
+
+  
+}
+//Αποθήκευση μηνυμάτων στο tab Chat
+function saveMessage(email, message) {
+  var email = Session.getActiveUser().getEmail(); // Παίρνει το email του χρήστη
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Chat");
+  let timestamp = "'" + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "HH:mm:ss a");
+  sheet.appendRow([timestamp, email, message]);
+  Logger.log("Saving message: ", [timestamp, email, message]);
+}
+
+function saveCase(message) {
+  //var email = Session.getActiveUser().getEmail(); // Παίρνει το email του χρήστη
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Chat");
+  let timestamp = "'" + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "HH:mm:ss a");
+  sheet.appendRow([timestamp, 'Description', message]);
+}
+//Τράβηγμα και για εμφάνιση μηνυμάτων
+function getMessages() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Chat");
+  var data = sheet.getDataRange().getValues();
+  var messages = [];
+  if (data.length === 0 || (data.length === 1 && data[0][0] === "")) {
+    return []; // Επιστρέφει κενή λίστα αν δεν υπάρχουν μηνύματα
+  }
+  else {
+    for (var i = 0; i < data.length; i++) {
+    var timestamp = data[i][0];
+    var username = data[i][1];
+    var message = data[i][2];
+    
+    messages.push({
+      timestamp: timestamp,
+      username: username,
+      message: message
+    });
+    }
+  }
+  console.log(messages);
+  return messages;
+}
+
+// Επιστρέφει το email του τρέχοντος χρήστη
+function getCurrentUserEmail() {
+  var email = Session.getActiveUser().getEmail(); // Or use other methods based on your needs
+  Logger.log("Email retrieved: " + email);
+  return email;
+}
